@@ -3,11 +3,11 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Dec 16 2015 11:47:52 GMT-0600 (CST) -->
+    <!--  Build Date: Wed Dec 16 2015 13:54:30 GMT-0600 (CST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Dec 16 2015 11:47:52 GMT-0600 (CST)";
-        var CHECKSUM = 17677658894;
+        var APP_BUILD_DATE = "Wed Dec 16 2015 13:54:30 GMT-0600 (CST)";
+        var CHECKSUM = 17800902263;
     </script>
     
     <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
@@ -688,8 +688,8 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
-            var xVal = xAxisAttributeField ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField),
-                yVal = yAxisAttributeField ? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField);
+            var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
+                yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
 
             if (!xVal || xVal.length === 0){
                 xVal = this.noneText;
