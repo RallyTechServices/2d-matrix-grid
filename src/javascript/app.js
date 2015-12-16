@@ -14,7 +14,10 @@ Ext.define("2d-matrix-grid", {
             yAxisField: 'Project',
             xAxisValues: undefined,
             yAxisValues: undefined,
-            gridFilter: ''
+            includeXTotal: true,
+            includeYTotal: true,
+            gridFilter: '',
+            includeBlanks: true
         }
     },
 
@@ -24,23 +27,13 @@ Ext.define("2d-matrix-grid", {
         Iteration: 'Name',
         Owner: 'Name'
     },
-    modelObj: undefined,
+
+    totalText: 'Total',
 
     launch: function() {
-        this._loadModel(this.getSettings());
+        this._createPivotedStore(this.getSettings());
     },
-    _loadModel: function(settings){
 
-        Rally.data.ModelFactory.getModel({
-            type: settings.modelName,
-            success: function(model) {
-                this.modelObj = model,
-                this._createPivotedStore(settings);
-            },
-            scope: this
-        });
-
-    },
     _createPivotedStore: function(settings){
 
         var psf = Ext.create('Rally.technicalservices.data.PivotStoreFactory',{
@@ -55,7 +48,11 @@ Ext.define("2d-matrix-grid", {
                attributeField: this.getYAxisAttributeField(),
                values: this.getYAxisValues()
            },
-           gridFilter: this.getSetting('gridFilter')
+           includeNone: this.getSetting('includeBlanks'),
+           includeXTotal: this.getSetting('includeXTotal'),
+           includeYTotal: this.getSetting('includeYTotal'),
+           gridFilter: this.getSetting('gridFilter'),
+           totalText: this.totalText
         });
         psf.on('load', this._addGrid, this);
         psf.on('error', this._showError, this);
@@ -108,9 +105,31 @@ Ext.define("2d-matrix-grid", {
 
     },
     _getColumns: function(fields){
-        var cols = [];
+        var cols = [],
+            yAxisField = this.getYAxisField(),
+            totalText = this.totalText;
+
         _.each(fields, function(key) {
-            cols.push({text: key, dataIndex: key});
+            var align = 'right',
+                flex = 1;
+
+            if (key === yAxisField){
+                align = 'left';
+                flex = 3
+            }
+
+            cols.push({
+                text: key,
+                dataIndex: key,
+                align: align,
+                flex: flex,
+                renderer: function(v,m,r){
+                    if ((r.get(yAxisField) === totalText) || key === totalText){
+                        m.tdCls = 'totalCls';
+                    }
+                    return v;
+                }
+            });
         });
 
         this.logger.log('_getColumns', cols);
@@ -140,6 +159,6 @@ Ext.define("2d-matrix-grid", {
     onSettingsUpdate: function (settings){
         this.logger.log('onSettingsUpdate',settings);
         Ext.apply(this, settings);
-        this._loadModel(settings);
+        this._createPivotedStore(settings);
     }
 });

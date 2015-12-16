@@ -167,7 +167,8 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             includeXTotal= this.includeXTotal,
             xValues =  xAxisFields,  //we take care of filtering out xAxisValues in the getXAxisFields function
             yValues = this.yAxis.values || [],
-            totalRow =  this._initializeRow(yAxisField, this.totalText, xAxisFields, includeXTotal),
+            totalText = this.totalText,
+            totalRow =  this._initializeRow(yAxisField, totalText, xAxisFields, includeXTotal),
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
@@ -185,7 +186,7 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
                 if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
                     dataHash[yVal][xVal] = dataHash[yVal][xVal] + 1;
                     if (includeXTotal) {
-                        dataHash[yVal].total = dataHash[yVal].total + 1;
+                        dataHash[yVal][totalText] = dataHash[yVal][totalText] + 1;
                     }
                     if (includeYTotal){
                         totalRow[xVal] =  totalRow[xVal] + 1;

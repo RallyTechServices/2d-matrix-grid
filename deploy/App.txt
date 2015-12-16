@@ -3,11 +3,11 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Dec 16 2015 11:05:02 GMT-0600 (CST) -->
+    <!--  Build Date: Wed Dec 16 2015 11:36:32 GMT-0600 (CST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Dec 16 2015 11:05:02 GMT-0600 (CST)";
-        var CHECKSUM = 15911871795;
+        var APP_BUILD_DATE = "Wed Dec 16 2015 11:36:32 GMT-0600 (CST)";
+        var CHECKSUM = 17625191354;
     </script>
     
     <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
@@ -192,7 +192,10 @@ Ext.define("2d-matrix-grid", {
             yAxisField: 'Project',
             xAxisValues: undefined,
             yAxisValues: undefined,
-            gridFilter: ''
+            includeXTotal: true,
+            includeYTotal: true,
+            gridFilter: '',
+            includeBlanks: true
         }
     },
 
@@ -202,23 +205,13 @@ Ext.define("2d-matrix-grid", {
         Iteration: 'Name',
         Owner: 'Name'
     },
-    modelObj: undefined,
+
+    totalText: 'Total',
 
     launch: function() {
-        this._loadModel(this.getSettings());
+        this._createPivotedStore(this.getSettings());
     },
-    _loadModel: function(settings){
 
-        Rally.data.ModelFactory.getModel({
-            type: settings.modelName,
-            success: function(model) {
-                this.modelObj = model,
-                this._createPivotedStore(settings);
-            },
-            scope: this
-        });
-
-    },
     _createPivotedStore: function(settings){
 
         var psf = Ext.create('Rally.technicalservices.data.PivotStoreFactory',{
@@ -233,7 +226,11 @@ Ext.define("2d-matrix-grid", {
                attributeField: this.getYAxisAttributeField(),
                values: this.getYAxisValues()
            },
-           gridFilter: this.getSetting('gridFilter')
+           includeNone: this.getSetting('includeBlanks'),
+           includeXTotal: this.getSetting('includeXTotal'),
+           includeYTotal: this.getSetting('includeYTotal'),
+           gridFilter: this.getSetting('gridFilter'),
+           totalText: this.totalText
         });
         psf.on('load', this._addGrid, this);
         psf.on('error', this._showError, this);
@@ -286,9 +283,31 @@ Ext.define("2d-matrix-grid", {
 
     },
     _getColumns: function(fields){
-        var cols = [];
+        var cols = [],
+            yAxisField = this.getYAxisField(),
+            totalText = this.totalText;
+
         _.each(fields, function(key) {
-            cols.push({text: key, dataIndex: key});
+            var align = 'right',
+                flex = 1;
+
+            if (key === yAxisField){
+                align = 'left';
+                flex = 3
+            }
+
+            cols.push({
+                text: key,
+                dataIndex: key,
+                align: align,
+                flex: flex,
+                renderer: function(v,m,r){
+                    if ((r.get(yAxisField) === totalText) || key === totalText){
+                        m.tdCls = 'totalCls';
+                    }
+                    return v;
+                }
+            });
         });
 
         this.logger.log('_getColumns', cols);
@@ -318,7 +337,7 @@ Ext.define("2d-matrix-grid", {
     onSettingsUpdate: function (settings){
         this.logger.log('onSettingsUpdate',settings);
         Ext.apply(this, settings);
-        this._loadModel(settings);
+        this._createPivotedStore(settings);
     }
 });
 
@@ -661,7 +680,8 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             includeXTotal= this.includeXTotal,
             xValues =  xAxisFields,  //we take care of filtering out xAxisValues in the getXAxisFields function
             yValues = this.yAxis.values || [],
-            totalRow =  this._initializeRow(yAxisField, this.totalText, xAxisFields, includeXTotal),
+            totalText = this.totalText,
+            totalRow =  this._initializeRow(yAxisField, totalText, xAxisFields, includeXTotal),
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
@@ -679,7 +699,7 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
                 if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
                     dataHash[yVal][xVal] = dataHash[yVal][xVal] + 1;
                     if (includeXTotal) {
-                        dataHash[yVal].total = dataHash[yVal].total + 1;
+                        dataHash[yVal][totalText] = dataHash[yVal][totalText] + 1;
                     }
                     if (includeYTotal){
                         totalRow[xVal] =  totalRow[xVal] + 1;
@@ -716,11 +736,14 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
     singleton: true,
 
     getFields: function(modelName){
+        var width = 150;
         var settings = [{
             xtype: 'rallyfieldcombobox',
             model: modelName,
             name: 'xAxisField',
             fieldLabel: 'X Axis Field',
+            labelWidth: width,
+            labelAlign: 'right',
             blackListFields: [],
             whiteListFields: ['Release','Iteration','ScheduleState','State'],
             allowedTypes: ['STRING','RATING'],
@@ -730,6 +753,8 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             name: 'xAxisValues',
             xtype: 'multivaluecombo',
             readyEvent: 'ready',
+            labelWidth: width,
+            labelAlign: 'right',
             width: 500,
             modelName: modelName,
             fieldName: null,
@@ -746,7 +771,9 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             xtype: 'rallyfieldcombobox',
             model: modelName,
             name: 'yAxisField',
+            labelAlign: 'right',
             fieldLabel: 'Y Axis Field',
+            labelWidth: width,
             blackListFields: [],
             whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy'],
             allowedTypes: ['STRING','RATING'],
@@ -757,6 +784,8 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             xtype: 'multivaluecombo',
             //margin: '0 0 25 10',
             readyEvent: 'ready',
+            labelWidth: width,
+            labelAlign: 'right',
             width: 500,
             modelName: modelName,
             fieldName: null,
@@ -770,12 +799,34 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
                 }
             }
         },{
-            xtype: 'textarea',
+            xtype: 'rallycheckboxfield',
+            fieldLabel: 'Include Blanks',
+            value: true,
+            name: 'includeBlanks',
+            labelAlign: 'right',
+            labelWidth: width
+        },{
+            xtype: 'rallycheckboxfield',
+            fieldLabel: 'Include Row Totals',
+            value: true,
+            name: 'includeXTotal',
+            labelAlign: 'right',
+            labelWidth: width
+        },{
+            xtype: 'rallycheckboxfield',
+            fieldLabel: 'Include Column Totals',
+            value: true,
+            name: 'includeYTotal',
+            labelAlign: 'right',
+            labelWidth: width
+        },{            xtype: 'textarea',
             fieldLabel: 'Query',
             name: 'gridFilter',
             anchor: '100%',
             cls: 'query-field',
             margin: '0 70 0 0',
+            labelAlign: 'right',
+            labelWidth: width,
             plugins: [
                 {
                     ptype: 'rallyhelpfield',
@@ -925,6 +976,11 @@ Ext.define('Rally.technicalservices.WsapiToolbox',{
     margin-top: 25px;
     margin-right: 5px;
     cursor: pointer;
+}
+.totalCls {
+    font-weight: bold;
+    color: #666666;
+    font-style: italic;
 }
     </style>
 
