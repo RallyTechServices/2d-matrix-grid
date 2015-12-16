@@ -3,11 +3,11 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Dec 16 2015 11:36:32 GMT-0600 (CST) -->
+    <!--  Build Date: Wed Dec 16 2015 11:40:09 GMT-0600 (CST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Dec 16 2015 11:36:32 GMT-0600 (CST)";
-        var CHECKSUM = 17625191354;
+        var APP_BUILD_DATE = "Wed Dec 16 2015 11:40:09 GMT-0600 (CST)";
+        var CHECKSUM = 17677657051;
     </script>
     
     <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
@@ -289,11 +289,14 @@ Ext.define("2d-matrix-grid", {
 
         _.each(fields, function(key) {
             var align = 'right',
-                flex = 1;
+                flex = 2;
 
             if (key === yAxisField){
                 align = 'left';
-                flex = 3
+                flex = 3;
+            }
+            if (key === totalText){
+                flex = 1;
             }
 
             cols.push({

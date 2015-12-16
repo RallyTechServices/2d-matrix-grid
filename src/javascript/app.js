@@ -111,11 +111,14 @@ Ext.define("2d-matrix-grid", {
 
         _.each(fields, function(key) {
             var align = 'right',
-                flex = 1;
+                flex = 2;
 
             if (key === yAxisField){
                 align = 'left';
-                flex = 3
+                flex = 3;
+            }
+            if (key === totalText){
+                flex = 1;
             }
 
             cols.push({
