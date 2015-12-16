@@ -172,8 +172,8 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
-            var xVal = xAxisAttributeField ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField),
-                yVal = yAxisAttributeField ? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField);
+            var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
+                yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
 
             if (!xVal || xVal.length === 0){
                 xVal = this.noneText;
