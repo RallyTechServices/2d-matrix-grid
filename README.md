@@ -1,5 +1,25 @@
 #2D Matrix Grid
 
+Grid that shows the count of artifacts where the field matches the displayed values for the selected fields on the X and Y Axis.  
+
+![ScreenShot](/images/2d-matrix-grid.png)
+
+###App Configuration
+App Settings include:
+* X Axis Field - The field who's allowed values to display along the (top) horizontal axis of the grid
+* X Axis Values (optional) - The subset of values to display along the horizontal axis of the grid.  If this is blank, all values will be displayed.
+* Y Axis Field - The field who's allowed values to display along the (left) vertical axis of the grid
+* Y Axis Values (optional) - The subset of values to display along the vertical axis of the grid.  If this is blank, all values that are populated in at least one artifact will be displayed.**
+* Include Blanks - Whether or not to include a columns\row for artifacts that are blank for the selected field(s) 
+* Include Row Totals - Includes a total column as the last column of the grid. 
+* Include Column Totals - Includes a total row as the last row of the grid.
+* Query - A Rally query to use to limit the data set displayed.  
+
+![ScreenShot](/images/2d-matrix-settings.png)
+
+
+
+
 ## Development Notes
 
 ### First Load
