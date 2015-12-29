@@ -3,11 +3,11 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Dec 16 2015 13:54:30 GMT-0600 (CST) -->
+    <!--  Build Date: Tue Dec 29 2015 12:59:34 GMT-0700 (MST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Dec 16 2015 13:54:30 GMT-0600 (CST)";
-        var CHECKSUM = 17800902263;
+        var APP_BUILD_DATE = "Tue Dec 29 2015 12:59:34 GMT-0700 (MST)";
+        var CHECKSUM = 25619025799;
     </script>
     
     <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
@@ -195,7 +195,10 @@ Ext.define("2d-matrix-grid", {
             includeXTotal: true,
             includeYTotal: true,
             gridFilter: '',
-            includeBlanks: true
+            includeBlanks: true,
+            sortBy: 'total',
+            sortDir: 'desc',
+            rowLimit: ''
         }
     },
 
@@ -203,7 +206,8 @@ Ext.define("2d-matrix-grid", {
         Project: 'Name',
         Release: 'Name',
         Iteration: 'Name',
-        Owner: 'Name'
+        Owner: 'Name',
+        Tags: "_tagsNameArray"
     },
 
     totalText: 'Total',
@@ -230,7 +234,10 @@ Ext.define("2d-matrix-grid", {
            includeXTotal: this.getSetting('includeXTotal'),
            includeYTotal: this.getSetting('includeYTotal'),
            gridFilter: this.getSetting('gridFilter'),
-           totalText: this.totalText
+           totalText: this.totalText,
+            sortBy: this.getSetting('sortBy'),
+            sortDir: this.getSetting('sortDir'),
+            rowLimit: this.getSetting('rowLimit')
         });
         psf.on('load', this._addGrid, this);
         psf.on('error', this._showError, this);
@@ -335,7 +342,7 @@ Ext.define("2d-matrix-grid", {
         return typeof(this.getAppId()) == 'undefined';
     },
     getSettingsFields: function(){
-        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSetting('modelName'));
+        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSetting('modelName'), this.getSettings());
     },
     onSettingsUpdate: function (settings){
         this.logger.log('onSettingsUpdate',settings);
@@ -380,10 +387,25 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
 
     },
     _initCombobox: function(){
-        var me = this;
         if (this.down('rallycombobox')){
             this.down('rallycombobox').destroy();
         }
+        if (this.down('rallytagpicker')){
+            this.down('rallytagpicker').destroy();
+        }
+        var me = this;
+
+        if (this.fieldName === 'Tags'){
+            this.add({
+                xtype: 'rallytagpicker'
+            });
+            return;
+        } else {
+            this._addMultiValueComboBox();
+        }
+    },
+    _addMultiValueComboBox: function(){
+        var me = this;
 
         this.add([{
             xtype: 'rallycombobox',
@@ -412,7 +434,6 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
         if (this.modelName && this.fieldName){
             this._loadValues();
         }
-
     },
     _loadValues: function() {
         Rally.technicalservices.WsapiToolbox.fetchAllowedValues(this.modelName,this.fieldName).then({
@@ -444,7 +465,16 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
 
     getSubmitData: function() {
         var data = {};
-        data[this.name] = this.currentValue;
+        if (this.down('rallytagpicker')){
+            var vals = [];
+            _.each(this.down('rallytagpicker').getValue(), function(tag){
+                vals.push(tag.get('Name'));
+            });
+            data[this.name] = vals;
+        } else {
+            data[this.name] = this.currentValue;
+        }
+
         return data;
     }
 });
@@ -630,12 +660,67 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
         }).load({
             callback: function(records, operation, success){
                 this.logger.log('fetchRecords load', records, operation, success);
-                deferred.resolve(records);
+                var collectionField = this.getCollectionField();
+                if (false){ //We don't need this for tags, because we have the _tagsNameArray attribute but might if we add other collection fields
+                //if (collectionField && collectionField.length > 0){
+                    return this.fetchCollectionValues(records, collectionField);
+                } else {
+                    deferred.resolve(records);
+                }
             },
             scope: this
         });
 
         return deferred;
+    },
+    fetchCollectionValues: function(records, collectionField){
+        var deferred = Ext.create('Deft.Deferred'),
+            me = this,
+            promises = [];
+
+        _.each(records, function(r){
+            if (r.get(collectionField) && r.get(collectionField).Count > 0){
+                promises.push(this.fetchCollection(r, collectionField));
+            } else {
+                r.set(collectionField + 'Array', []);
+            }
+        }, this);
+
+        if (promises.length > 0){
+            Deft.Promise.all(promises).then({
+                success: function(){
+                    me.logger.log('fetchCollectionValues', records);
+                    deferred.resolve(records);
+                }
+            });
+        } else {
+            deferred.resolve(records);
+        }
+
+        return deferred;
+    },
+    fetchCollection: function(record, fieldName){
+        var deferred = Ext.create('Deft.Deferred');
+
+        record.getCollection(fieldName).load({
+            callback: function(records, operation, success){
+                var collectionNames = [];
+                _.each(records, function(r){
+                    collectionNames.push(r.get('Name'));
+                });
+                record.set(fieldName + 'Array', collectionNames);
+                console.log('record.set', fieldName, collectionNames, record);
+                deferred.resolve();
+            }
+        });
+
+        return deferred;
+    },
+    getCollectionField: function(){
+        if (this.yAxis.field === 'Tags'){
+            return "Tags";
+        }
+        return null;
     },
     loadPivotedDataStore: function(){
 
@@ -688,37 +773,93 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
-            var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
-                yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
+                var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
+                    yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
 
-            if (!xVal || xVal.length === 0){
-                xVal = this.noneText;
-            }
+                if (!xVal || xVal.length === 0){
+                    xVal = this.noneText;
+                }
 
-            if (Ext.Array.contains(yValues, yVal) || yValues.length === 0){
-                if (!dataHash[yVal]){
-                    dataHash[yVal] = this._initializeRow(yAxisField, yVal, xAxisFields, includeXTotal);
-                }
-                if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
-                    dataHash[yVal][xVal] = dataHash[yVal][xVal] + 1;
-                    if (includeXTotal) {
-                        dataHash[yVal][totalText] = dataHash[yVal][totalText] + 1;
+                var includedYVals = [];
+                if (yAxisAttributeField === '_tagsNameArray'){ //_tagsNameArray
+                    includedYVals = _.map(yVal, function(y){
+                        return y.Name;
+                    });
+                    if (yValues.length > 0){
+                        includedYVals = Ext.Array.intersect(includedYVals, yValues);
                     }
-                    if (includeYTotal){
-                        totalRow[xVal] =  totalRow[xVal] + 1;
+                } else {
+                    if (Ext.Array.contains(yValues, yVal) || yValues.length === 0) {
+                        includedYVals.push(yVal)
                     }
                 }
-            }
-        }, this);
+
+                _.each(includedYVals, function(y){
+                    if (!dataHash[y]){
+                        dataHash[y] = this._initializeRow(yAxisField, y, xAxisFields, includeXTotal);
+                    }
+                    if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
+                        dataHash[y][xVal] = dataHash[y][xVal] + 1;
+                        if (includeXTotal) {
+                            dataHash[y][totalText] = dataHash[y][totalText] + 1;
+                        }
+                        if (includeYTotal){
+                            totalRow[xVal] =  totalRow[xVal] + 1;
+                            totalRow[totalText] = totalRow[totalText] + 1;
+                        }
+                    }
+                }, this);
+
+            }, this);
 
         if (includeYTotal) {
             dataHash[this.totalText] = totalRow;
         }
 
+        var sortField = yAxisField;
+        if (this.sortBy === 'total'){
+            sortField = this.totalText;
+        }
+
+        var data = this._getSortedData(dataHash, sortField, this.sortDir, this.rowLimit, this.totalText, yAxisField);
         return Ext.create('Rally.data.custom.Store',{
             fields: fields,
-            data: _.values(dataHash)
+            data: data,
+            remoteSort: false
         });
+    },
+    _getSortedData: function(dataHash, sortField, sortDir, rowLimit, totalText, nameField){
+        var data = _.values(dataHash),
+            sortMultiplier = sortDir.toLowerCase() === 'asc' ? -1 : 1,
+            sortedData = Ext.Array.sort(data, function(a,b){
+                if (b[nameField] === totalText){
+                    return -1;
+                }
+                if (a[sortField] < b[sortField])
+                    return sortMultiplier;
+                if (a[sortField] > b[sortField])
+                    return -1 * sortMultiplier;
+                return 0;
+            });
+
+        if (rowLimit && rowLimit > 0){
+            var truncatedData = Ext.Array.slice(sortedData,0,rowLimit);
+            if (rowLimit < sortedData.length && dataHash[totalText]){
+                //now we need to recalculate the total row and add it back in...
+                var totalRow = {};
+                totalRow[nameField] = totalText;
+                _.each(truncatedData, function(rec){
+                    _.each(rec, function(val, key){
+                        if (key !== nameField){
+                            totalRow[key] = (totalRow[key] || 0) + val;
+                        }
+                    });
+                });
+                truncatedData.push(totalRow);
+            }
+            return truncatedData;
+        }
+        return sortedData;
     },
     _initializeRow: function(yAxisField, yVal, xAxisFields, includeXTotal){
         var row = {};
@@ -738,7 +879,11 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
 Ext.define('Rally.technicalservices.TwoDGridSettings',{
     singleton: true,
 
-    getFields: function(modelName){
+    getFields: function(modelName, config){
+
+        var sortBy = config.sortBy || 'alpha',
+            sortDir = config.sortDir || 'desc';
+
         var width = 150;
         var settings = [{
             xtype: 'rallyfieldcombobox',
@@ -778,7 +923,7 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             fieldLabel: 'Y Axis Field',
             labelWidth: width,
             blackListFields: [],
-            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy'],
+            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags'],
             allowedTypes: ['STRING','RATING'],
             constrained: true,
             bubbleEvents: ['change']
@@ -822,7 +967,52 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             name: 'includeYTotal',
             labelAlign: 'right',
             labelWidth: width
-        },{            xtype: 'textarea',
+        },{
+            xtype: 'radiogroup',
+            fieldLabel: 'Sort By',
+            columns: 1,
+            vertical: true,
+            labelWidth: width,
+            labelAlign: 'right',
+            items: [{
+                boxLabel: "Alphabetical",
+                name: 'sortBy',
+                inputValue: 'alpha',
+                checked: sortBy === 'alpha'
+            },{
+                boxLabel: "Total",
+                name: 'sortBy',
+                inputValue: 'total',
+                checked: sortBy === 'total'
+            }]
+        },{
+            xtype: 'radiogroup',
+            fieldLabel: 'Sort Direction',
+            columns: 1,
+            vertical: true,
+            labelWidth: width,
+            labelAlign: 'right',
+            items: [{
+                boxLabel: "Descending",
+                name: 'sortDir',
+                inputValue: 'desc',
+                checked: sortDir === 'desc'
+            },{
+                boxLabel: "Ascending",
+                name: 'sortDir',
+                inputValue: 'asc',
+                checked: sortDir === 'asc'
+            }]
+        },{
+            xtype: 'rallynumberfield',
+            fieldLabel: 'Total Rows to Display (Blank for no limit)',
+            name: 'rowLimit',
+            labelWidth: width,
+            labelAlign: 'right',
+            minValue: 1,
+            allowBlank: true
+        },{
+            xtype: 'textarea',
             fieldLabel: 'Query',
             name: 'gridFilter',
             anchor: '100%',

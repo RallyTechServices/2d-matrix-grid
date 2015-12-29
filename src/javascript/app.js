@@ -17,7 +17,10 @@ Ext.define("2d-matrix-grid", {
             includeXTotal: true,
             includeYTotal: true,
             gridFilter: '',
-            includeBlanks: true
+            includeBlanks: true,
+            sortBy: 'total',
+            sortDir: 'desc',
+            rowLimit: ''
         }
     },
 
@@ -25,7 +28,8 @@ Ext.define("2d-matrix-grid", {
         Project: 'Name',
         Release: 'Name',
         Iteration: 'Name',
-        Owner: 'Name'
+        Owner: 'Name',
+        Tags: "_tagsNameArray"
     },
 
     totalText: 'Total',
@@ -52,7 +56,10 @@ Ext.define("2d-matrix-grid", {
            includeXTotal: this.getSetting('includeXTotal'),
            includeYTotal: this.getSetting('includeYTotal'),
            gridFilter: this.getSetting('gridFilter'),
-           totalText: this.totalText
+           totalText: this.totalText,
+            sortBy: this.getSetting('sortBy'),
+            sortDir: this.getSetting('sortDir'),
+            rowLimit: this.getSetting('rowLimit')
         });
         psf.on('load', this._addGrid, this);
         psf.on('error', this._showError, this);
@@ -157,7 +164,7 @@ Ext.define("2d-matrix-grid", {
         return typeof(this.getAppId()) == 'undefined';
     },
     getSettingsFields: function(){
-        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSetting('modelName'));
+        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSetting('modelName'), this.getSettings());
     },
     onSettingsUpdate: function (settings){
         this.logger.log('onSettingsUpdate',settings);
