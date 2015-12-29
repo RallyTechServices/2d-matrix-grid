@@ -3,10 +3,10 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Dec 29 2015 12:59:34 GMT-0700 (MST) -->
+    <!--  Build Date: Tue Dec 29 2015 13:49:45 GMT-0700 (MST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Dec 29 2015 12:59:34 GMT-0700 (MST)";
+        var APP_BUILD_DATE = "Tue Dec 29 2015 13:49:45 GMT-0700 (MST)";
         var CHECKSUM = [%= checksum %];
     </script>
     

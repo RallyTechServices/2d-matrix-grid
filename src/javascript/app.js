@@ -91,9 +91,22 @@ Ext.define("2d-matrix-grid", {
         return vals;
     },
     getXAxisAttributeField: function(){
+        if (this.getXAxisField() === 'State'){
+            var re = new RegExp("^PortfolioItem","i");
+            if (re.test(this.getSetting('modelName'))){
+                return "Name";
+            }
+        }
         return this.fieldTypeAttribute[this.getXAxisField()] || null;
     },
     getYAxisAttributeField: function(){
+        if (this.getYAxisField() === 'State'){
+            var re = new RegExp("^PortfolioItem","i");
+            if (re.test(this.getSetting('modelName'))){
+                return "Name";
+            }
+        }
+
         return this.fieldTypeAttribute[this.getYAxisField()] || null;
     },
     _addGrid: function(store, fields){
@@ -164,7 +177,7 @@ Ext.define("2d-matrix-grid", {
         return typeof(this.getAppId()) == 'undefined';
     },
     getSettingsFields: function(){
-        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSetting('modelName'), this.getSettings());
+        return Rally.technicalservices.TwoDGridSettings.getFields(this.getSettings());
     },
     onSettingsUpdate: function (settings){
         this.logger.log('onSettingsUpdate',settings);
