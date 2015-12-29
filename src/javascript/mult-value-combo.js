@@ -34,10 +34,25 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
 
     },
     _initCombobox: function(){
-        var me = this;
         if (this.down('rallycombobox')){
             this.down('rallycombobox').destroy();
         }
+        if (this.down('rallytagpicker')){
+            this.down('rallytagpicker').destroy();
+        }
+        var me = this;
+
+        if (this.fieldName === 'Tags'){
+            this.add({
+                xtype: 'rallytagpicker'
+            });
+            return;
+        } else {
+            this._addMultiValueComboBox();
+        }
+    },
+    _addMultiValueComboBox: function(){
+        var me = this;
 
         this.add([{
             xtype: 'rallycombobox',
@@ -66,7 +81,6 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
         if (this.modelName && this.fieldName){
             this._loadValues();
         }
-
     },
     _loadValues: function() {
         Rally.technicalservices.WsapiToolbox.fetchAllowedValues(this.modelName,this.fieldName).then({
@@ -98,7 +112,16 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
 
     getSubmitData: function() {
         var data = {};
-        data[this.name] = this.currentValue;
+        if (this.down('rallytagpicker')){
+            var vals = [];
+            _.each(this.down('rallytagpicker').getValue(), function(tag){
+                vals.push(tag.get('Name'));
+            });
+            data[this.name] = vals;
+        } else {
+            data[this.name] = this.currentValue;
+        }
+
         return data;
     }
 });

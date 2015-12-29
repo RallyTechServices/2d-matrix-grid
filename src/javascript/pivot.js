@@ -114,12 +114,67 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
         }).load({
             callback: function(records, operation, success){
                 this.logger.log('fetchRecords load', records, operation, success);
-                deferred.resolve(records);
+                var collectionField = this.getCollectionField();
+                if (false){ //We don't need this for tags, because we have the _tagsNameArray attribute but might if we add other collection fields
+                //if (collectionField && collectionField.length > 0){
+                    return this.fetchCollectionValues(records, collectionField);
+                } else {
+                    deferred.resolve(records);
+                }
             },
             scope: this
         });
 
         return deferred;
+    },
+    fetchCollectionValues: function(records, collectionField){
+        var deferred = Ext.create('Deft.Deferred'),
+            me = this,
+            promises = [];
+
+        _.each(records, function(r){
+            if (r.get(collectionField) && r.get(collectionField).Count > 0){
+                promises.push(this.fetchCollection(r, collectionField));
+            } else {
+                r.set(collectionField + 'Array', []);
+            }
+        }, this);
+
+        if (promises.length > 0){
+            Deft.Promise.all(promises).then({
+                success: function(){
+                    me.logger.log('fetchCollectionValues', records);
+                    deferred.resolve(records);
+                }
+            });
+        } else {
+            deferred.resolve(records);
+        }
+
+        return deferred;
+    },
+    fetchCollection: function(record, fieldName){
+        var deferred = Ext.create('Deft.Deferred');
+
+        record.getCollection(fieldName).load({
+            callback: function(records, operation, success){
+                var collectionNames = [];
+                _.each(records, function(r){
+                    collectionNames.push(r.get('Name'));
+                });
+                record.set(fieldName + 'Array', collectionNames);
+                console.log('record.set', fieldName, collectionNames, record);
+                deferred.resolve();
+            }
+        });
+
+        return deferred;
+    },
+    getCollectionField: function(){
+        if (this.yAxis.field === 'Tags'){
+            return "Tags";
+        }
+        return null;
     },
     loadPivotedDataStore: function(){
 
@@ -172,28 +227,43 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             dataHash = this._initializeDataHash(yValues, xValues,includeXTotal,includeYTotal);
 
             _.each(records, function(r){
-            var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
-                yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
+                var xVal = xAxisAttributeField && r.get(xAxisField) ? r.get(xAxisField)[xAxisAttributeField] : r.get(xAxisField) || this.noneText,
+                    yVal = yAxisAttributeField && r.get(yAxisField)? r.get(yAxisField)[yAxisAttributeField] : r.get(yAxisField) || this.noneText;
 
-            if (!xVal || xVal.length === 0){
-                xVal = this.noneText;
-            }
+                if (!xVal || xVal.length === 0){
+                    xVal = this.noneText;
+                }
 
-            if (Ext.Array.contains(yValues, yVal) || yValues.length === 0){
-                if (!dataHash[yVal]){
-                    dataHash[yVal] = this._initializeRow(yAxisField, yVal, xAxisFields, includeXTotal);
-                }
-                if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
-                    dataHash[yVal][xVal] = dataHash[yVal][xVal] + 1;
-                    if (includeXTotal) {
-                        dataHash[yVal][totalText] = dataHash[yVal][totalText] + 1;
+                var includedYVals = [];
+                if (yAxisAttributeField === '_tagsNameArray'){ //_tagsNameArray
+                    includedYVals = _.map(yVal, function(y){
+                        return y.Name;
+                    });
+                    if (yValues.length > 0){
+                        includedYVals = Ext.Array.intersect(includedYVals, yValues);
                     }
-                    if (includeYTotal){
-                        totalRow[xVal] =  totalRow[xVal] + 1;
+                } else {
+                    if (Ext.Array.contains(yValues, yVal) || yValues.length === 0) {
+                        includedYVals.push(yVal)
                     }
                 }
-            }
-        }, this);
+                console.log('includedYVals', includedYVals, yVal, yValues);
+                _.each(includedYVals, function(y){
+                    if (!dataHash[y]){
+                        dataHash[y] = this._initializeRow(yAxisField, y, xAxisFields, includeXTotal);
+                    }
+                    if (Ext.Array.contains(xValues, xVal) || xValues.length === 0){
+                        dataHash[y][xVal] = dataHash[y][xVal] + 1;
+                        if (includeXTotal) {
+                            dataHash[y][totalText] = dataHash[y][totalText] + 1;
+                        }
+                        if (includeYTotal){
+                            totalRow[xVal] =  totalRow[xVal] + 1;
+                        }
+                    }
+                }, this);
+
+            }, this);
 
         if (includeYTotal) {
             dataHash[this.totalText] = totalRow;
