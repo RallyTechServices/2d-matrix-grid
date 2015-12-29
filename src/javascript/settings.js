@@ -1,7 +1,11 @@
 Ext.define('Rally.technicalservices.TwoDGridSettings',{
     singleton: true,
 
-    getFields: function(modelName){
+    getFields: function(modelName, config){
+
+        var sortBy = config.sortBy || 'alpha',
+            sortDir = config.sortDir || 'desc';
+
         var width = 150;
         var settings = [{
             xtype: 'rallyfieldcombobox',
@@ -85,7 +89,52 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             name: 'includeYTotal',
             labelAlign: 'right',
             labelWidth: width
-        },{            xtype: 'textarea',
+        },{
+            xtype: 'radiogroup',
+            fieldLabel: 'Sort By',
+            columns: 1,
+            vertical: true,
+            labelWidth: width,
+            labelAlign: 'right',
+            items: [{
+                boxLabel: "Alphabetical",
+                name: 'sortBy',
+                inputValue: 'alpha',
+                checked: sortBy === 'alpha'
+            },{
+                boxLabel: "Total",
+                name: 'sortBy',
+                inputValue: 'total',
+                checked: sortBy === 'total'
+            }]
+        },{
+            xtype: 'radiogroup',
+            fieldLabel: 'Sort Direction',
+            columns: 1,
+            vertical: true,
+            labelWidth: width,
+            labelAlign: 'right',
+            items: [{
+                boxLabel: "Descending",
+                name: 'sortDir',
+                inputValue: 'desc',
+                checked: sortDir === 'desc'
+            },{
+                boxLabel: "Ascending",
+                name: 'sortDir',
+                inputValue: 'asc',
+                checked: sortDir === 'asc'
+            }]
+        },{
+            xtype: 'rallynumberfield',
+            fieldLabel: 'Total Rows to Display (Blank for no limit)',
+            name: 'rowLimit',
+            labelWidth: width,
+            labelAlign: 'right',
+            minValue: 1,
+            allowBlank: true
+        },{
+            xtype: 'textarea',
             fieldLabel: 'Query',
             name: 'gridFilter',
             anchor: '100%',

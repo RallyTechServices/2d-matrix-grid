@@ -247,7 +247,7 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
                         includedYVals.push(yVal)
                     }
                 }
-                console.log('includedYVals', includedYVals, yVal, yValues);
+
                 _.each(includedYVals, function(y){
                     if (!dataHash[y]){
                         dataHash[y] = this._initializeRow(yAxisField, y, xAxisFields, includeXTotal);
@@ -259,6 +259,7 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
                         }
                         if (includeYTotal){
                             totalRow[xVal] =  totalRow[xVal] + 1;
+                            totalRow[totalText] = totalRow[totalText] + 1;
                         }
                     }
                 }, this);
@@ -269,10 +270,50 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
             dataHash[this.totalText] = totalRow;
         }
 
+        var sortField = yAxisField;
+        if (this.sortBy === 'total'){
+            sortField = this.totalText;
+        }
+
+        var data = this._getSortedData(dataHash, sortField, this.sortDir, this.rowLimit, this.totalText, yAxisField);
         return Ext.create('Rally.data.custom.Store',{
             fields: fields,
-            data: _.values(dataHash)
+            data: data,
+            remoteSort: false
         });
+    },
+    _getSortedData: function(dataHash, sortField, sortDir, rowLimit, totalText, nameField){
+        var data = _.values(dataHash),
+            sortMultiplier = sortDir.toLowerCase() === 'asc' ? -1 : 1,
+            sortedData = Ext.Array.sort(data, function(a,b){
+                if (b[nameField] === totalText){
+                    return -1;
+                }
+                if (a[sortField] < b[sortField])
+                    return sortMultiplier;
+                if (a[sortField] > b[sortField])
+                    return -1 * sortMultiplier;
+                return 0;
+            });
+
+        if (rowLimit && rowLimit > 0){
+            var truncatedData = Ext.Array.slice(sortedData,0,rowLimit);
+            if (rowLimit < sortedData.length && dataHash[totalText]){
+                //now we need to recalculate the total row and add it back in...
+                var totalRow = {};
+                totalRow[nameField] = totalText;
+                _.each(truncatedData, function(rec){
+                    _.each(rec, function(val, key){
+                        if (key !== nameField){
+                            totalRow[key] = (totalRow[key] || 0) + val;
+                        }
+                    });
+                });
+                truncatedData.push(totalRow);
+            }
+            return truncatedData;
+        }
+        return sortedData;
     },
     _initializeRow: function(yAxisField, yVal, xAxisFields, includeXTotal){
         var row = {};
