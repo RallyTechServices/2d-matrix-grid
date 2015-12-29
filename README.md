@@ -6,6 +6,7 @@ Grid that shows the count of artifacts where the field matches the displayed val
 
 ###App Configuration
 App Settings include:
+* Model Name - the model type that the matrix will count items for.
 * X Axis Field - The field who's allowed values to display along the (top) horizontal axis of the grid
 * X Axis Values (optional) - The subset of values to display along the horizontal axis of the grid.  If this is blank, all values will be displayed.
 * Y Axis Field - The field who's allowed values to display along the (left) vertical axis of the grid
@@ -13,11 +14,12 @@ App Settings include:
 * Include Blanks - Whether or not to include a columns\row for artifacts that are blank for the selected field(s) 
 * Include Row Totals - Includes a total column as the last column of the grid. 
 * Include Column Totals - Includes a total row as the last row of the grid.
+* Sort By: Alphabetical or Total (count of items for each row)
+* Sort Direction: Descending or Ascending sort
+* Row Limit:  This will limit the number of rows to display and include in total calculations (if selected).  If this is blank, all rows will be displayed.  This will display the top N rows according to the sort by and sort direction settings. 
 * Query - A Rally query to use to limit the data set displayed.  
 
 ![ScreenShot](/images/2d-matrix-settings.png)
-
-
 
 
 ## Development Notes

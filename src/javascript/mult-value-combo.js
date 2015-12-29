@@ -26,6 +26,11 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
         this.fieldName = fieldName;
         this._initCombobox();
     },
+    setModel: function(modelName){
+        this.fieldName = "";
+        this.modelName = modelName;
+        this._initCombobox();
+    },
     initComponent: function() {
         this.callParent(arguments);
 
@@ -83,6 +88,7 @@ Ext.define('Rally.technicalservices.MultiValueComboBox',{
         }
     },
     _loadValues: function() {
+        console.log('_loadValues', this.modelName, this.fieldName);
         Rally.technicalservices.WsapiToolbox.fetchAllowedValues(this.modelName,this.fieldName).then({
             scope: this,
             success: function(value_names) {

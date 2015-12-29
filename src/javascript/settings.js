@@ -1,15 +1,43 @@
 Ext.define('Rally.technicalservices.TwoDGridSettings',{
     singleton: true,
 
-    getFields: function(modelName, config){
+    getFields: function(config){
 
         var sortBy = config.sortBy || 'alpha',
             sortDir = config.sortDir || 'desc';
 
         var width = 150;
         var settings = [{
+            xtype: 'rallycombobox',
+            name: 'modelName',
+            fieldLabel: 'Artifact Type',
+            labelWidth: width,
+            labelAlign: 'right',
+            bubbleEvents: ['change'],
+            valueField: 'TypePath',
+            value: config.modelName,
+            storeConfig: {
+                model: 'TypeDefinition',
+                remoteSort: true,
+                remoteFilter: true,
+                filters: [{
+                    property: 'Creatable',
+                    value: true
+                },{
+                    property: 'Deletable',
+                    value: true
+                },{
+                    property: 'Restorable',
+                    value: true
+                },{
+                    property: 'Name',
+                    operator: '!=',
+                    value: 'Milestone'
+                }]
+            }
+        },{
             xtype: 'rallyfieldcombobox',
-            model: modelName,
+            model: config.modelName,
             name: 'xAxisField',
             fieldLabel: 'X Axis Field',
             labelWidth: width,
@@ -18,7 +46,15 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             whiteListFields: ['Release','Iteration','ScheduleState','State'],
             allowedTypes: ['STRING','RATING'],
             constrained: true,
-            bubbleEvents: ['change']
+            bubbleEvents: ['change'],
+            value: config.xAxisField,
+            handlesEvents: {
+                change: function(cb) {
+                    if (cb.name === 'modelName'){
+                        this.refreshWithNewModelType(cb.getRecord().get('TypePath'));
+                    }
+                }
+            }
         },{
             name: 'xAxisValues',
             xtype: 'multivaluecombo',
@@ -26,12 +62,15 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             labelWidth: width,
             labelAlign: 'right',
             width: 500,
-            modelName: modelName,
+            modelName: config.modelName,
             fieldName: null,
             emptyText: 'Choose field values to limit columns or leave blank to show all values...',
             fieldLabel: 'X Axis Values',
             handlesEvents: {
                 change: function(cb) {
+                    if (cb.name === 'modelName'){
+                        this.setModel(cb.getRecord().get('TypePath'));
+                    }
                     if (cb.name === 'xAxisField'){
                         this.refreshField(cb.getValue());
                     }
@@ -39,7 +78,7 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             }
         },{
             xtype: 'rallyfieldcombobox',
-            model: modelName,
+            model: config.modelName,
             name: 'yAxisField',
             labelAlign: 'right',
             fieldLabel: 'Y Axis Field',
@@ -48,7 +87,15 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags'],
             allowedTypes: ['STRING','RATING'],
             constrained: true,
-            bubbleEvents: ['change']
+            bubbleEvents: ['change'],
+            value: config.yAxisField,
+            handlesEvents: {
+                change: function(cb) {
+                    if (cb.name === 'modelName'){
+                        this.refreshWithNewModelType(cb.getRecord().get('TypePath'));
+                    }
+                }
+            }
         },{
             name: 'yAxisValues',
             xtype: 'multivaluecombo',
@@ -57,12 +104,15 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             labelWidth: width,
             labelAlign: 'right',
             width: 500,
-            modelName: modelName,
+            modelName: config.modelName,
             fieldName: null,
             fieldLabel: 'Y Axis Values',
             emptyText: 'Choose field values to limit rows or leave blank to show all values...',
             handlesEvents: {
                 change: function(cb) {
+                    if (cb.name === 'modelName'){
+                        this.setModel(cb.getRecord().get('TypePath'));
+                    }
                     if (cb.name === 'yAxisField'){
                         this.refreshField(cb.getValue());
                     }
@@ -71,21 +121,21 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
         },{
             xtype: 'rallycheckboxfield',
             fieldLabel: 'Include Blanks',
-            value: true,
+            value: config.includeBlanks,
             name: 'includeBlanks',
             labelAlign: 'right',
             labelWidth: width
         },{
             xtype: 'rallycheckboxfield',
             fieldLabel: 'Include Row Totals',
-            value: true,
+            value: config.includeXTotal,
             name: 'includeXTotal',
             labelAlign: 'right',
             labelWidth: width
         },{
             xtype: 'rallycheckboxfield',
             fieldLabel: 'Include Column Totals',
-            value: true,
+            value: config.includeYTotal,
             name: 'includeYTotal',
             labelAlign: 'right',
             labelWidth: width
@@ -132,7 +182,8 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             labelWidth: width,
             labelAlign: 'right',
             minValue: 1,
-            allowBlank: true
+            allowBlank: true,
+            value: config.rowLimit
         },{
             xtype: 'textarea',
             fieldLabel: 'Query',
