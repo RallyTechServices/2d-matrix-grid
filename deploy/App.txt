@@ -3,11 +3,11 @@
 <head>
     <title>2D Matrix Grid</title>
     <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Dec 29 2015 13:49:44 GMT-0700 (MST) -->
+    <!--  Build Date: Tue May 10 2016 16:24:17 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Dec 29 2015 13:49:44 GMT-0700 (MST)";
-        var CHECKSUM = 28574019746;
+        var APP_BUILD_DATE = "Tue May 10 2016 16:24:17 GMT-0600 (MDT)";
+        var CHECKSUM = 28709545756;
     </script>
     
     <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
@@ -207,7 +207,9 @@ Ext.define("2d-matrix-grid", {
         Release: 'Name',
         Iteration: 'Name',
         Owner: 'Name',
-        Tags: "_tagsNameArray"
+        Tags: "_tagsNameArray",
+        Parent: 'Name',
+        PortfolioItem: 'Name'
     },
 
     totalText: 'Total',
@@ -551,12 +553,12 @@ Ext.override(Rally.ui.combobox.FieldComboBox,{
                 showField = false;
             }
 
-            if (Ext.Array.contains(this.whiteListFields, field.name)){
-                showField = true;
-            }
-
             if (this.constrained === true && field.attributeDefinition.Constrained !== true){
                 showField = false;
+            }
+
+            if (Ext.Array.contains(this.whiteListFields, field.name)){
+                showField = true;
             }
         }
 
@@ -981,7 +983,7 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             fieldLabel: 'Y Axis Field',
             labelWidth: width,
             blackListFields: [],
-            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags'],
+            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags','Parent','PortfolioItem'],
             allowedTypes: ['STRING','RATING'],
             constrained: true,
             bubbleEvents: ['change'],
