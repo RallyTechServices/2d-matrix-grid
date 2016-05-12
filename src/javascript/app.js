@@ -31,7 +31,8 @@ Ext.define("2d-matrix-grid", {
         Owner: 'UserName',
         Tags: "_tagsNameArray",
         Parent: 'Name',
-        PortfolioItem: 'Name'
+        PortfolioItem: 'Name',
+        SubmittedBy: "UserName"
     },
 
     totalText: 'Total',
