@@ -52,12 +52,12 @@ Ext.override(Rally.ui.combobox.FieldComboBox,{
                 showField = false;
             }
 
-            if (Ext.Array.contains(this.whiteListFields, field.name)){
-                showField = true;
-            }
-
             if (this.constrained === true && field.attributeDefinition.Constrained !== true){
                 showField = false;
+            }
+
+            if (Ext.Array.contains(this.whiteListFields, field.name)){
+                showField = true;
             }
         }
 
