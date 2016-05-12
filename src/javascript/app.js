@@ -28,7 +28,7 @@ Ext.define("2d-matrix-grid", {
         Project: 'Name',
         Release: 'Name',
         Iteration: 'Name',
-        Owner: 'Name',
+        Owner: 'UserName',
         Tags: "_tagsNameArray",
         Parent: 'Name',
         PortfolioItem: 'Name'
