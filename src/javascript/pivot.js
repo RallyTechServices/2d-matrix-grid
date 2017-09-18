@@ -279,7 +279,8 @@ Ext.define('Rally.technicalservices.data.PivotStoreFactory',{
         return Ext.create('Rally.data.custom.Store',{
             fields: fields,
             data: data,
-            remoteSort: false
+            remoteSort: false,
+            pageSize: data.length 
         });
     },
     _getSortedData: function(dataHash, sortField, sortDir, rowLimit, totalText, nameField){

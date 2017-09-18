@@ -1,7 +1,8 @@
 {
     "name": "2D Matrix Grid",
     "className": "2d-matrix-grid",
-    "server": "https://demo-services1.rallydev.com",
-    "sdk": "2.0",
-    "apiKey": "_PUT_APIKEY_HERE_"
+    "server": "https://demo-west.rallydev.com",
+    "sdk": "2.1",
+    "apiKey": "_PUT_APIKEY_HERE_",
+    "story": "US1716"
 }
