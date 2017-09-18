@@ -2,16 +2,22 @@
 <html>
 <head>
     <title>2D Matrix Grid</title>
-    <!--  (c) 2015 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu May 12 2016 11:57:42 GMT-0600 (MDT) -->
+    <!--  (c) 2017 CA Technologies.  All Rights Reserved. -->
+    <!--  Build Date: Thu Aug 24 2017 09:27:06 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu May 12 2016 11:57:42 GMT-0600 (MDT)";
-        var CHECKSUM = 28772461673;
+        var APP_BUILD_DATE = "Thu Aug 24 2017 09:27:06 GMT-0600 (MDT)";
+        var STORY    = "US1716";
+        var BUILDER  = "";
+        var CHECKSUM = 29248812286;
     </script>
     
-    <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
-
+    <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
+    <!-- our highcharts (needed so that we can add patterns) 
+    <script type="text/javascript" src="/apps/2.1/lib/analytics/analytics-all.js"></script>
+    -->
+    
+    
     <script type="text/javascript">
         Rally.onReady(function() {
              
@@ -208,6 +214,7 @@ Ext.define("2d-matrix-grid", {
         Iteration: 'Name',
         Owner: 'UserName',
         Tags: "_tagsNameArray",
+        Milestones: "_tagsNameArray",
         Parent: 'Name',
         PortfolioItem: 'Name',
         SubmittedBy: "UserName"
@@ -348,12 +355,12 @@ Ext.define("2d-matrix-grid", {
             }
         ];
     },
-    
+
     _launchInfo: function() {
         if ( this.about_dialog ) { this.about_dialog.destroy(); }
         this.about_dialog = Ext.create('Rally.technicalservices.InfoLink',{});
     },
-    
+
     isExternal: function(){
         return typeof(this.getAppId()) == 'undefined';
     },
@@ -984,7 +991,7 @@ Ext.define('Rally.technicalservices.TwoDGridSettings',{
             fieldLabel: 'Y Axis Field',
             labelWidth: width,
             blackListFields: [],
-            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags','Parent','PortfolioItem'],
+            whiteListFields: ['Release','Iteration','Project','ScheduleState','State','Owner','SubmittedBy','Tags','Parent','PortfolioItem','TestSets'],
             allowedTypes: ['STRING','RATING'],
             constrained: true,
             bubbleEvents: ['change'],

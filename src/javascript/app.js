@@ -30,6 +30,7 @@ Ext.define("2d-matrix-grid", {
         Iteration: 'Name',
         Owner: 'UserName',
         Tags: "_tagsNameArray",
+        Milestones: "_tagsNameArray",
         Parent: 'Name',
         PortfolioItem: 'Name',
         SubmittedBy: "UserName"
@@ -42,7 +43,7 @@ Ext.define("2d-matrix-grid", {
     },
 
     _createPivotedStore: function(settings){
-
+      this.logger.log('_createPivotedStore', settings);
         var psf = Ext.create('Rally.technicalservices.data.PivotStoreFactory',{
            modelName: settings.modelName,
            xAxis: {
@@ -123,7 +124,8 @@ Ext.define("2d-matrix-grid", {
             xtype: 'rallygrid',
             store: store,
             columnCfgs: this._getColumns(fields),
-            showPagingToolbar: false
+            showPagingToolbar: false,
+            showRowActionsColumn: false
         });
 
     },
@@ -170,12 +172,12 @@ Ext.define("2d-matrix-grid", {
             }
         ];
     },
-    
+
     _launchInfo: function() {
         if ( this.about_dialog ) { this.about_dialog.destroy(); }
         this.about_dialog = Ext.create('Rally.technicalservices.InfoLink',{});
     },
-    
+
     isExternal: function(){
         return typeof(this.getAppId()) == 'undefined';
     },
